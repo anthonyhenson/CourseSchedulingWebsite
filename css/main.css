@@ -1,0 +1,565 @@
+
+/*
+viewport
+mobile: (< 480)
+tablet: 481 - 1000
+laptop/desktop: > 1000
+
+transform: translate(0,0px);
+*/
+
+body {
+	font-family: Georgia, serif;
+}
+/* COLORS */
+.black {
+	color: #000000;
+}
+.black_background {
+    background-color: #000000;
+}
+.white {
+	color: #FFFFFF;
+}
+.white_background {
+	background-color: #FFFFFF;
+}
+.blue {
+	color: #00275E;
+}
+.blue_background {
+    background-color: #00275E;
+}
+.lightgrey {
+	color: #A8B1B8;
+}
+.lightgrey_background {
+    background-color: #A8B1B8;
+}
+.grey {
+	color: #545557;
+}
+.grey_background {
+    background-color: #545557;
+}
+
+/* --------------------GRID VIEWS ---------------------*/
+.column-1 {width: 8.33%;}
+.column-2 {width: 16.66%;}
+.column-3 {width: 25%;}
+.column-4 {width: 33.33%;}
+.column-5 {width: 41.66%;}
+.column-6 {width: 50%;}
+.column-7 {width: 58.33%;}
+.column-8 {width: 66.66%;}
+.column-9 {width: 75%;}
+.column-10 {width: 83.33%;}
+.column-11 {width: 91.66%;}
+.column-12 {width: 100%;}
+
+[class*="columns-left"] {
+    float: left;
+}
+[class*="columns-right"] {
+    float: right;
+}
+.row::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+.container {
+	display: flex;
+	align-items: center;
+}
+.center {
+	text-align: center;
+}
+.marginb_10 {
+    margin-bottom: 10px;
+}
+.marginb_20 {
+    margin-bottom: 20px;
+}
+.marginb_30 {
+    margin-bottom: 30px;
+}
+.marginb_40 {
+    margin-bottom: 40px;
+}
+.marginb_50 {
+    margin-bottom: 50px;
+}
+.margint_10 {
+    margin-top: 10px;
+}
+.margint_20 {
+    margin-top: 20px;
+}
+.margint_30 {
+    margin-top: 30px;
+}
+.margint_40 {
+    margin-top: 40px;
+}
+.margint_50 {
+    margin-top: 50px;
+}
+/* ------------------------------------NAVBAR ----------------------------------------*/
+
+/* ************** LOGO ************** */
+#nav {
+	height: 65px;
+}
+#cbu_logo {
+	margin-left: 30px;
+    margin-top: 10px;
+	
+}
+/* LINKS */
+.nav_items {
+    color: white;
+    margin: 10px 30px 10px 0px;    
+    padding: 5px 15px 5px 15px;
+    border: 2px solid white;
+    border-radius: 5px;
+    float: right;
+}
+.nav_items:hover {
+	font-weight: 600;
+}
+
+/* SIGN-OUT BUTTON */
+#sign_out_nav {
+	float: right;
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	line-height: 40px;
+	vertical-align: center;
+	margin-right: 30px;
+	margin-left: 10px;
+	margin-top: 10px;
+	transition-duration: 0.7s;
+	font-size: 17px;
+	
+}
+#sign_out_nav:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#sign_out_nav:active {
+    background-color: #A8B1B8;
+}
+
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 150px;
+    background-color: white;
+    text-align: center;
+    font-size: 15px;
+ 
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    
+    padding: 10px 10px 10px 10px;
+    border-radius: 6px 0px 6px 6px;
+    
+    border-width: 3px;
+    border-style: solid;
+    border-color: black;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+/* ------------------------------------ HEADER ----------------------------------------*/
+#page_title {
+    font-size: 20px;
+    float: none;
+    margin: 30px 0 20px 0;
+}
+/* ------------------------------------ FOOTER ----------------------------------------*/
+#footer {
+	width: 100%;
+	color: white;
+	font-size: 12px;
+	text-align: center;
+	display: inline-block;
+	margin-top: 50px;
+}
+#footer, .page-wrap:after {
+	height: 55px; 
+}
+html, body {
+  height: 100%;
+}
+main {
+    display: inline-block;
+}
+.page-wrap {
+  min-height: 100%;
+  /* equal to footer height */
+  margin-bottom: 55px; 
+}
+.page-wrap:after {
+  content: "";
+  display: block;
+}
+#footer_logo {
+    margin-top: 5px;
+}
+
+/* ------------------------------------ hr tag ----------------------------------------*/
+hr.styled {
+    width: 80%;
+    float: none;
+    border-top: 3px double #8c8b8b;
+    padding-top: 0px;
+    margin-top: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-left: 10%;
+    margin-right: 10%;
+    
+}
+
+/* ------------------------------------ ALL MODALS --------------------------------*/
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+.modal-content {
+	padding: 0px 0px 30px 0px;
+    background-color: #FEFEFE;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    margin: 15% auto; 
+}
+.modal-content h3{
+   text-align: center;
+   color: #00275E;
+   font-size: 20px;
+   font-weight: 700;
+   margin-bottom: 20px;
+   clear: both;
+}
+.test_description {
+   text-align: center;
+   color: #00275E;
+   font-size: 15px;
+   margin: 20px 8.33% 20px 8.33%;
+}
+
+/* modal close */
+span[class^='close_modal'] {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    margin: 10px 20px 0px 0px;
+}
+span[class^='close_modal']:hover, span[class^='close_modal']:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 800;
+}
+/* FORM */
+.section {
+	text-align: center;
+	font-weight: 700;
+	line-height: 90px;
+	vertical-align: middle;
+	color: #00275E;
+}
+.input_frame {
+	text-align: center;
+	font-weight: 700;
+	line-height: 90px;
+	vertical-align: middle;
+	color: #00275E;
+	padding-left: 0px;
+	float: left;
+}
+.modal_input {
+	height: 30px;
+	border: 1px solid black;
+	text-align: center;
+	border-radius: 5%;
+	width: 150px;
+}
+/* SUBMIT AND RESET BUTTON */
+.submit_button {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	line-height: 40px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-family: optima;
+	font-size: 17px;
+	width: 100px;
+	margin-top: 20px;
+	margin-right: 12%;
+	
+}
+.submit_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+.submit_button:active {
+    background-color: #A8B1B8;
+}
+
+/* ------------------------------- SCHEDULE TABLE ------------------------------------*/
+.schedule_table {
+	width: 100%;
+	border-spacing: 0;
+	border-collapse: separate;
+	table-layout: fixed;
+	border-width: 0px 2px 1px 0px;
+	border-style: solid;
+	border-color: black;
+}
+.schedule_table tr > th {
+    background-color: #00275E;
+    color: white;
+    font-weight: 600;
+    border-bottom: 2px solid black;
+    font-size: 15px;
+    height: 40px;
+    vertical-align: middle;
+}
+.schedule_table tr > td {
+	text-align: center;
+	vertical-align: middle;
+	border-left: 1px solid #626e7e;
+	position: relative;
+	height: 32px;
+}
+
+.schedule_table tr:nth-child(even) {
+	background-color: #d9d9d9;
+}
+.schedule_table tr:nth-child(odd) {
+	background-color: #f2f2f2;
+}
+.schedule_table tr:nth-child(4n+1) td { 
+	border-bottom: 1px solid black;
+}
+
+/* side hour columns */
+.times {
+	width: 100%;
+	border-width: 0px 0px 1px 2px;
+	border-style: solid;
+	border-color: #00275E;
+}
+.times th {
+  background-color: #00275E;
+  border-bottom: 2px solid black;
+  height: 40px;
+}
+.times tr > td {
+    vertical-align: middle;
+}
+.hour2 {
+    text-align: center;
+	position: relative;
+	height: 128px;
+	background-color: white;
+	font-size: 20px;
+	border-width: 0px 0px 1px 0px;
+	border-style: solid;
+	border-color: black;
+}
+.hour2:last-child {
+	border-bottom-width: 2px;
+}
+
+/* ------------------------------- ALL RESOURCES VIEW ------------------------------------*/
+.resource_all {
+    width: 100%;
+    border: 3px double #8c8b8b;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 50px;
+}
+.resource_x {
+    margin-bottom: 5px;
+}
+.resource_text {
+    text-align: left;
+    padding-left: 20px;
+}
+.resource_buttons {
+    text-align: right;
+    padding-right: 20px;
+}
+.resource_buttons input {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-size: 13px;
+	margin-left: 20px;
+	padding: 5px 10px 5px 10px;
+}
+.resource_buttons input:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+.resource_buttons input:active {
+    background-color: #A8B1B8;
+}
+/* individual resource */
+.alter_items {
+    text-align: center;
+    font-size: 20px;
+    color: #00275E;
+    margin-bottom: 20px;
+}
+.alter_items span {
+    margin-right: 20px;
+    font-weight: 700;
+}
+.alter_items_sub {
+    text-align: center;
+    font-size: 13px;
+    color: white;
+    margin-bottom: 20px;
+}
+.alter_items_sub span {
+    margin-right: 20px;
+    font-weight: 700;
+}
+.alter_section_button {
+    float: right;
+    background-color: #FEB729;
+    padding: 15px;
+    border-radius: 20px;
+    height: 40px;
+    line-height: 12px;
+    margin-bottom: 10px;
+}
+.alter_section_button {
+    float: right;
+    background-color: #FEB729;
+    padding: 15px;
+    border-radius: 20px;
+    height: 40px;
+    line-height: 12px;
+    margin-bottom: 10px;
+    transition-duration: 0.7s;
+}
+.alter_section_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+.alter_section_button:active {
+    background-color: #A8B1B8;
+}
+.section_delete input[type='checkbox'] {
+    -webkit-appearance:none;
+    width:30px;
+    height:30px;
+    background:white;
+    border-radius:5px;
+    border:2px solid #555;
+    margin-left: 20px;
+}
+.section_delete input[type='checkbox']:checked {
+    background: #545557;
+}
+/* ------------------------------- CONSTRAINTS ------------------------------------*/
+.constraint_title {
+    font-size: 15px;
+    color: #00275E;
+    margin: 10px 0 10px 0;
+}
+/* SET AND CLEAR RADIO BUTTONS */ 
+.radio_constraint {
+    line-height: 40px;
+    vertical-align: middle;
+}
+
+
+
+
+
+
+
+
+
+/* day selection */ 
+.day_dropdown {
+	height: 30px;
+	border: 1px solid #545557;
+	text-align: center;
+	border-radius: 5%;
+	width: 150px;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 90px;
+	vertical-align: middle;
+	text-indent: 10px;
+	color: #545557;
+}
+/* time selection */ 
+.time_dropdown {
+	height: 30px;
+	border: 1px solid #545557;
+	text-align: center;
+	border-radius: 5%;
+	width: 100px;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 90px;
+	vertical-align: middle;
+	text-indent: 2px;
+	color: #545557;
+}
+.save_resource_buttons {
+    text-align: right;
+    padding-right: 20px;
+}
+.save_resource_buttons input {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-size: 15px;
+	margin-left: 20px;
+	padding: 5px 10px 5px 10px;
+    height: 32px;
+    width: 80px;
+}
+.save_resource_buttons input:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+.save_resource_buttons input:active {
+    background-color: #A8B1B8;
+}

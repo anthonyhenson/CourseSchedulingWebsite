@@ -1,0 +1,51 @@
+#add_courses_button {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-size: 17px;
+	margin-left: 20px;
+	padding: 10px 20px 10px 20px;
+	
+}
+#add_courses_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#add_courses_button:active {
+    background-color: #A8B1B8;
+}
+#delete_section {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-size: 13px;
+	margin-left: 30px;
+	margin-bottom: 20px;
+	margin-top: 5px;
+	padding: 5px 10px 5px 10px;
+	
+}
+#delete_section:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#delete_section:active {
+    background-color: #A8B1B8;
+}
+
+/* ------------------------------------ COURSES MODAL --------------------------------*/
+
+#modal_course {
+    height: 360px;
+}
+#modal_section {
+    height: 350px;
+}

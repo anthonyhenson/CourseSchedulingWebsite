@@ -1,0 +1,43 @@
+/* get rid of radio button */ 
+/*input[type=radio].with-font {*/
+/*    border: none;*/
+/*    clip: rect(0 0 0 0);*/
+/*    height: 10px;*/
+/*    margin: -1px;*/
+/*    overflow: hidden;*/
+/*    padding: 0;*/
+/*    position: absolute;*/
+/*    width: 1px;*/
+/*}*/
+/* font before clicked*/    
+/*input[type=radio]#male_radio ~ label:before {*/
+/*    font-family: FontAwesome;*/
+/*    display: inline-block;*/
+/*    content: "\f183";*/
+/*    color: #535353;*/
+    
+/*    border: 3px solid #535353;*/
+/*    border-radius: 50%;*/
+/*    padding: 15px 18px 15px 18px;*/
+
+/*}*/
+/*input[type=radio]#female_radio ~ label:before {*/
+/*    font-family: FontAwesome;*/
+/*    display: inline-block;*/
+/*    content: "\f182";*/
+/*    color: #535353;*/
+    
+/*    border: 3px solid #535353;*/
+/*    border-radius: 50%;*/
+/*    padding: 15px;*/
+/*}*/
+
+/*input[type=radio]#female_radio:checked ~ label:before  {*/
+/*    color: #FEB729;*/
+/*    border-color: #FEB729;*/
+/*}*/
+/* font change after radio clicked and color change when clicked outside radio area*/
+/*input[type=radio]#male_radio:checked ~ label:before  {*/
+/*    color: green;*/
+/*    border-color: #FEB729;*/
+/*}*/

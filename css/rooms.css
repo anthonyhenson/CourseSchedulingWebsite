@@ -1,0 +1,50 @@
+#add_room_button {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-size: 17px;
+	margin-left: 20px;
+	padding: 10px 20px 10px 20px;
+	
+}
+#add_room_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#add_room_button:active {
+    background-color: #A8B1B8;
+}
+
+
+/* ------------------------------------ ROOM MODAL --------------------------------*/
+
+.room_section {
+	text-align: center;
+	font-weight: 700;
+	line-height: 90px;
+	vertical-align: middle;
+	color: #00275E;
+}
+.room_input_frame {
+	text-align: center;
+	font-weight: 700;
+	line-height: 90px;
+	vertical-align: middle;
+	color: #00275E;
+	padding-left: 0px;
+	float: left;
+}
+.room_modal_input {
+	height: 30px;
+	border: 1px solid black;
+	text-align: center;
+	border-radius: 5%;
+	width: 150px;
+}
+#modal_room {
+    height: 350px;
+}

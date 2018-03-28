@@ -1,0 +1,97 @@
+
+* {
+    -webkit-box-sizing: border-box;
+	   -moz-box-sizing: border-box;
+	        box-sizing: border-box;
+	outline: none;
+}
+
+/*.form-control {*/
+/*	  position: relative;*/
+/*	  font-size: 16px;*/
+/*	  height: auto;*/
+/*	  padding: 10px;*/
+/*		@include box-sizing(border-box);*/
+
+/*		&:focus {*/
+/*		  z-index: 2;*/
+/*		}*/
+/*	}*/
+	
+#forgot_password{
+    color:  white;
+}
+#email_icon {
+	font-size: 25px;
+	line-height: 46px;
+	vertical-align: center;
+	border: solid black;
+	border-width: 2px 1px 2px 2px;
+	float: right;
+	margin: 10px 0px 10px 0px;
+	padding: 0px 5px 0px 5px;
+	border-radius: 10px 0px 0px 10px;
+}
+#login_button{
+    background-color: #000080;
+    color: white;
+}
+#password_icon {
+	font-size: 35px;
+	line-height: 46px;
+	vertical-align: center;
+	border: solid black;
+	border-width: 2px 1px 2px 2px;
+	float: right;
+	margin: 10px 0px 10px 0px;
+	padding: 0px 5px 0px 5px;
+	border-radius: 10px 0px 0px 10px;
+}
+.reset_pass a {
+	color: #000080;
+	padding: 0px 15px 0px 60px;
+	text-decoration: none;
+}
+
+body {
+	background:  url("../img/BackgroundCBU2.PNG") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.login-form {
+	margin-top: 60px;
+}
+
+form[role=login] {
+	color: white;
+	background: white;
+	padding: 15px;
+	border-radius: 10px;
+	-moz-border-radius: 50px;
+	-webkit-border-radius: 50px;
+}
+
+form[role=login] img {
+		display: block;
+		margin: 0 auto;
+		margin-bottom: 35px;
+}
+.login-form{
+    position: fixed;
+    top:40%;
+    left:49%;
+    transform: translate(-50%,-50%);
+}
+
+form[role=login] input,
+form[role=login] button {
+		font-size: 18px;
+		margin: 16px 0;
+}
+form[role=login] > div {
+		text-align: center;
+}

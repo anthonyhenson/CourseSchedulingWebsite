@@ -1,0 +1,26 @@
+#add_professor_button {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	vertical-align: middle;
+	text-align: center;
+	transition-duration: 0.7s;
+	font-size: 17px;
+	margin-left: 20px;
+	padding: 10px 20px 10px 20px;
+	
+}
+#add_professor_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#add_professor_button:active {
+    background-color: #A8B1B8;
+}
+
+/* ------------------------------------ PROFESSOR MODAL --------------------------------*/
+
+#modal_professor {
+    height: 350px;
+}

@@ -1,0 +1,83 @@
+/* ------------------------------------ HOME RESOURCE LINKS --------------------------------*/
+.all_resources {
+	width: 66.66%;
+	margin: 0px 16.66% 0px 16.66%;
+	float: left;
+}
+.resource_section {
+	width: 33.33%;
+	float: left;
+	margin-top: 60px;
+}
+.resource_title {
+	color: #00275E;
+	font-weight: 800;
+	margin: 20px 0px 20px 0px;
+	font-size: 20px;
+	text-align: center;
+}
+
+/* ------------------------------------ GENERATE SCHEDULE --------------------------------*/
+
+#schedule_block {
+    margin-bottom: 30px;
+}
+#generate_title {
+    font-size: 20px;
+    float: none;
+    margin: 40px 0 20px 0;
+}
+#generate_image {
+    margin-left: 10%;
+}
+#generate_info {
+    font-size: 18px;
+    font-weight: 600px;
+    margin-right: 10%;
+    padding-left: 30px;
+}
+#generate_button {
+    background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+	line-height: 40px;
+	vertical-align: center;
+	margin-right: 50px;
+	margin-left: 10px;
+	margin-top: 20px;
+	transition-duration: 0.7s;
+	font-size: 17px;
+	width: 90%;
+}
+#generate_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#generate_button:active {
+    background-color: #A8B1B8;
+}
+/* ------------------------------------ COURSE SCHEDULE --------------------------------*/
+#course_schedule_table {
+	width: 100%;
+	border-spacing: 5px;
+	border-collapse: separate;
+}
+th {
+	padding: 0.5em;
+	background-color: #00275E;
+	color: white;
+	font-weight: 700;
+	font-size: 15px;
+	line-height: 30px;
+	margin-bottom: 50px;
+}
+td {
+	text-align: center;
+	vertical-align: middle;
+	background-color: grey;
+	height: 32px;
+}
+tr:nth-child(even) td {background-color: #d9d9d9;}
+tr:nth-child(odd) td {background-color: #f2f2f2;}
+

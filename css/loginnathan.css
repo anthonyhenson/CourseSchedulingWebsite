@@ -1,0 +1,98 @@
+
+/* ************** BACKGROUND IMAGE ************** */
+#background_login {
+	top: 65px;
+	left: 0px;
+	right: 0px;
+	position: absolute;
+	background-image: url('/capstone/img/login_background.jpg');
+	opacity: .3;
+    background-repeat: no-repeat;
+    z-index: -1;
+   	background-size: cover;
+}
+
+
+/* ************** LOGIN FORM ************** */
+
+#login_fields {
+	border-radius: 30px;
+	background: rgba(84, 85, 87, 0.7);
+	display: inline-block;
+	height: 470px;
+	margin-top: 80px;
+	width: 500px;
+}
+#login_fields h1 {
+	font-size: 20px;
+	text-align: center;
+	color: #00275E;
+	margin: 20px 0px 20px 0px;
+	font-weight: 700;  
+}
+input.login_input  
+{  
+	height: 50px;
+	font-size: 20px;
+	margin: 10px 8.33% 10px 0px;
+	padding: 0px 10px 0px 10px;
+	border-style: solid solid solid none;
+	border-radius: 0px 10px 10px 0px;
+}
+#email_icon {
+	font-size: 25px;
+	line-height: 46px;
+	vertical-align: center;
+	border: solid black;
+	border-width: 2px 1px 2px 2px;
+	float: right;
+	margin: 10px 0px 10px 0px;
+	padding: 0px 5px 0px 5px;
+	border-radius: 10px 0px 0px 10px;
+}
+#password_icon {
+	font-size: 35px;
+	line-height: 46px;
+	vertical-align: center;
+	border: solid black;
+	border-width: 2px 1px 2px 2px;
+	float: right;
+	margin: 10px 0px 10px 0px;
+	padding: 0px 5px 0px 5px;
+	border-radius: 10px 0px 0px 10px;
+}
+#login_button {
+	color: white;
+	font-size: 13px;
+	background-color: #FEB729;
+	border: none;
+	border-radius: 5px;
+	line-height: 40px;
+	vertical-align: center;
+	transition-duration: 0.7s;
+	margin: 10px 8.33% 10px 0px;
+	float: right;
+}
+#login_button:hover {
+	background-color: #00275E;
+}
+#login_button:active {
+	background-color: #A8B1B8;
+}
+.reset_pass {
+	line-height: 44px;
+	vertical-align: center;
+	margin: 10px 0px 0px 8.33%;
+}
+.reset_pass a {
+	color: white;
+	text-decoration: none;
+}
+.reset_pass a:hover {
+	color: #00275E;
+	font-weight: 700;
+}
+.reset_pass a:active {
+	color: #A8B1B8;
+	font-weight: 700;
+}
