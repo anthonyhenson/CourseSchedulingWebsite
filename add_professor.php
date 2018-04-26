@@ -53,7 +53,8 @@
 				<script>alert("Error in adding professor!");</script> <?php
 			}
 			else {  ?>
-				<script>alert("Professor succesfully added");</script> <?php
+				<script>alert("Professor succesfully added");
+				window.location.assign("professors.php");</script> <?php
 			}
 		}
 		else { ?>

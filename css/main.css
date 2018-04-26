@@ -1,13 +1,3 @@
-
-/*
-viewport
-mobile: (< 480)
-tablet: 481 - 1000
-laptop/desktop: > 1000
-
-transform: translate(0,0px);
-*/
-
 body {
 	font-family: Georgia, serif;
 }
@@ -294,6 +284,7 @@ span[class^='close_modal']:hover, span[class^='close_modal']:focus {
 	color: #00275E;
 	padding-left: 0px;
 	float: left;
+	margin-top: 30px;
 }
 .modal_input {
 	height: 30px;
@@ -369,7 +360,7 @@ span[class^='close_modal']:hover, span[class^='close_modal']:focus {
 	width: 100%;
 	border-width: 0px 0px 1px 2px;
 	border-style: solid;
-	border-color: #00275E;
+	border-color: black;
 }
 .times th {
   background-color: #00275E;

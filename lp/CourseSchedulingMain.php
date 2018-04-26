@@ -1,246 +1,401 @@
 <?php
-require_once('TestDataHandler.php');
 require_once('SQLDataHandler.php');
-require_once('iDataHandler.php');
+require_once('CourseConflict.php');
+require_once('LinearProgramming.php');
 require_once('Professor.php');
 require_once('Room.php');
 require_once('Course.php');
 require_once('Section.php');
 /**
- * Created by PhpStorm.
- * User: AD
- * Date: 2/2/2018
- * Time: 12:52 AM
- */
-
-/**
- * Created by PhpStorm.
- * User: AD
- * Date: 1/31/2018
- * Time: 1:39 AM
- */
-//*********** POSSIBLE WAYS OF IMPROVEMENT *************** //
-//1. the first sections within the course lists will get priority on taking the first time slots. Possible
-//      solution is to loop through the algorithm with every possible ordering of each section in order to
-//      maximize the objective funciton further.
-//2. add another weighting for faculty preference to either teaching in the morning or afternoon:
-//      ex: Pij = {1.5 fits preference, 1 has no preference, .5 doesnt fit preference
-//      0 for not fitting preference would 0 out the sum of the section to room fit when it is possibly
-//      an ok fit so .5 is more appropriate
-//3. currently the main schedule can be viewed from each section: contains the room and times being taught
-//      as well as the professor teaching. Possibly add section string to professors and rooms to view what
-//      sections are occupying their time slots
-//*********** ENGINEERING SCHEDULING REQUIREMENTS *************** //
-//1. professor can choose either a MWF or TR schedule type
-//2. classes are either 1 or 3 credits
-//3. 3 unit classes are either MWF (1 hour) or TR (1.5 hour) based
-//4. 1 unit classes can be either MTWRF (1 hour)
-//5. classes can start during an 15 minute period of any hour
-//      1 credit: TR ONE HOUR (4 times + 1 on each end) = 6 slots
-//      1 credit: MWF ONE HOUR (4 times + 1 on each end) = 6 slots
-//      3 credits: TR 1.5 HOUR (6 + 1 each end) * 2 = 16 slots
-//      3 credits: MWF 1 HOUR (4 times + 1 each end) * 3 = 18 slots
-//********** CONSTRAINTS ***************//
-//1. no faculty assigned to more than one class (section) at a time
-//2. no room holding more than one class (section) at a time
-//3. course type (ex: needs projector) must be assigned to a room that fits that constraint with happiness of 1.5
-//4. at least 15 minutes between faculties end of class to next assigned class
-//5. at least 15 minutes between any end of one class to the start of another class in any room
-//6. section size must be less than or equal to room size assigned (efficiency weighting)
-
-class CourseSchedulingMain
-{
+* 
+*/
+class CourseSchedulingMain {
     
-    function main() { #check it
-
+    private $lstFilledSections;
+    private $lstMissedSections;
+    
+    private $lstProfessors;
+    private $lstCourses;
+    private $lstRooms;
+    
+    //variable to save id for version History
+    private $versionHistoryId;
+    
+    public function generateSchedule() {
         $dataHandler = new SQLDataHandler();
-        $lstProfessors = $dataHandler->getProfessors(); //implement like this
-        $lstCourses = $dataHandler->getCourses();
-        $lstRooms = $dataHandler->getRooms();
+        $dataHandler->clearProfessorTimesGenerated();
+        $this->lstProfessors = $dataHandler->getProfessors();
+        $dataHandler->clearCourseTimesGenerated();
+        $dataHandler->clearRoomsAssignedToSections();
+        $this->lstCourses = $dataHandler->getCourses($this->lstProfessors);
+        $dataHandler->clearRoomTimesGenerated();
+        $this->lstRooms = $dataHandler->getRooms();
         $LP = new LinearProgramming();
-        
+        $CC = new CourseConflict();
+    
+        $this->lstFilledSections = array();
+        $this->lstMissedSections = array();
+        $dObjectiveSum = 0.0; //objective value to be maximized
         $dTotalCourseSum = 0.0;//sum of all the sections within a course
-        $lstFilledSections = array();
-        $lstMissedSections = array();
         
-        //Removed try/catch block for data output to text document
+        //getting version History Id
+        $this->versionHistoryId = $dataHandler->getHistoryVersionId();
         
-        foreach ($lstCourses as $oC) {
-            $dTotalSectionSum = 0.0;
+        foreach ($this->lstCourses as $oC) {
+            $dTotalSectionSum = 0.0;    
             $bIsSectionAssigned = false;
-            $iEarlySectionIndex = 100;
+            $iEarlySectionIndex = 100; //used for best early time
             
-            foreach ($oC->getCourseSections() as $oS) {
+            $oCourseSections=array();
+            $oCourseSections= $oC->getCourseSections();
+            
+            foreach ($oCourseSections as $oS) { 
+                    
                 $oP = $oS->getProfessorAssigned();
-                $sProfesorScheduleType = (strcmp($oP->getAvailableDayNames()[0]->getDay(),"Monday") == 0) ? "MWF" : "TR";
-                $dBestSectionSum = 0.0;
-                $oBestRoom = null;
+                $sProfessorScheduleType = $oP->getAvailableDayNames();
+                $dBestSectionSum = 0.0; //best section sum
+                $oBestRoom = null; //best room fit
                 
                 $lstBestMWF = array();
-                $lstBestMWF[] = "Monday";
-                $lstBestMWF[] = "Wednesday";
-                $lstBestMWF[] = "Friday";
+                $lstBestMWF[] = new DayTimes("M");
+                $lstBestMWF[] = new DayTimes("W");
+                $lstBestMWF[] = new DayTimes("F");
                 
                 $lstBestTR = array();
-                $lstBestTR[] = "Tuesday";
-                $lstBestTR[] = "Thursday";
+                $lstBestTR[] = new DayTimes("T");
+                $lstBestTR[] = new DayTimes("R");
                 
-                foreach ($lstRooms as $oR) {
-                    $lstRoomDays = $oR->getDayList();
-                    $dHij = $LP->happinessRoomVal($oR, $oC, $oS);
+                //declare day and time indexes that will be the last saved. 
+                $timeIndexSaved = -1; // negative to tell not assigned
+                $dayIndexSaved = -1;
+                $isWeekSection = null; //used for week string in algorithm
+                
+                //each room in room list
+                foreach ($this->lstRooms as $oR) {
+                    $lstRoomDays = $oR->getDayList(); //room times with constraints
+                    $dHij = $LP->happinessRoomVal($oR, $oC, $oS); //room, course ,section
                     $dRoomEfficiency = $oS->getSectionSize() / $oR->getSeatingCapacity();
                     
+                    //okay type and enough seats
                     if ($dHij >= 1) {
+                    
+                        //1 credit and MWF
                         if ($oC->getCredits() == 1 && (strcmp($sProfessorScheduleType, "MWF") == 0)) {
-                            for ($i = 0; $i < $oP->getAvailableDayNames->size(); $i++) {
-                                $oD = $oP->getAvailableDayTimes()[$i];
-                                $lstProfessorDays = array();
-                                $lstProfessorDays= $oD;
-                                
-                                for ($j = 0; j < $oD->getTimeLengths()->size(); $j++) {
-                                    $bIsHourAvailableForRoom = $LP->isRoomtTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $oD->getDay());
+                            //each professor day
+                            for ($i = 0; $i < strlen($sProfessorScheduleType); $i++) {
+                                $oD = $oP->getDayList()[$i]; //individual daytime
+                                $lstProfessorDays= array();
+                                $lstProfessorDays[] = $oD;
+    
+                                for ($j = 0; $j < sizeof($oD->getTimeLengths()); $j++) {
+                                    $bIsHourAvailableForRoom = $LP->isRoomTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $oD->getDay());
                                     $bIsHourAvailableForProfessor = $LP->isProfessorTimesAvailable($j, $lstProfessorDays, $oC->getCredits());
+                                    //sectionID, dayIndex, timeIndex, isWeek, scheduleType
+                                    $bIsCourseConflict = $CC->doesCourseOverlap($oC->getSectionID, $i, $j, false, $sProfessorScheduleType);
                                     
-                                    if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom) {
+                                    //professor is available for one hour + 15 minutes before and after
+                                    if ($bIsHourAvailableForRoom && $bIsHourAvailableForProfessor && !$bIsCourseConflict) { 
                                         $dSectionSum = $dHij * $dRoomEfficiency;
-                                        
-                                        if ($dSectionSum > $dBestSectionSum && $j < $iEarlySectionIndex) {
+                                        if ($dSectionSum >= $dBestSectionSum && $j < $iEarlySectionIndex) {
                                             $dBestSectionSum = $dsectionSum;
                                             $lstBestMWF = $LP->clearAllTimeSlots($lstBestMWF);
                                             $lstBestMWF = $LP->assignTimeSlots($lstBestMWF, $j, $oC->getCredits(), $oD->getDay());
                                             $oBestRoom = $oR;
                                             $bIsSectionAssigned = true;
                                             $iEarlySectionIndex = $j;
-                                        } 
+                                            
+                                            $dayIndexSaved = $i; //save day time assigned
+                                            $timeIndexSaved = $j;
+                                            $isWeekSection = false; //only single day
+                                        }  
                                     }
                                 }
                             }
                         }
-                        
+    
+                        // 1 credit and TR schedule
                         if ($oC->getCredits() == 1 && (strcmp($sProfessorScheduleType, "TR") == 0)) {
-                            for ($i = 0; $i < $oP->getAvailableDayNames->size(); $i++) {
-                                $oD = $oP->getAvailableDayTimes()[$i];
+                            //each professor day
+                            for ($i = 0; $i < strlen($sProfessorScheduleType); $i++) {
+                                $oD = $oP->getDayList()[$i];
                                 $lstProfessorDays = array();
-                                $lstProfessorDays= $oD;
+                                $lstProfessorDays[] = $oD;
                                 
-                                for ($j = 0; j < $oD->getTimeLengths()->size(); $j++) {
-                                    $bIsHourAvailableForRoom = $LP->isRoomtTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $oD->getDay());
+                                for ($j = 0; $j < sizeof($oD->getTimeLengths()); $j++) {
+                                    $bIsHourAvailableForRoom = $LP->isRoomTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $oD->getDay());
                                     $bIsHourAvailableForProfessor = $LP->isProfessorTimesAvailable($j, $lstProfessorDays, $oC->getCredits());
+                                    //sectionID, dayIndex, timeIndex, isWeek, scheduleType
+                                    $bIsCourseConflict = $CC->doesCourseOverlap($oC->getSectionID, $i, $j, false, $sProfessorScheduleType);
                                     
-                                    if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom) {
+                                    if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom && !$bIsCourseConflict) {
                                         $dSectionSum = $dHij * $dRoomEfficiency;
                                         
-                                        if ($dSectionSum > $dBestSectionSum && $j < $iEarlySectionIndex) {
+                                        if ($dSectionSum >= $dBestSectionSum && $j < $iEarlySectionIndex) {
                                             $dBestSectionSum = $dsectionSum;
+                                        
                                             $lstBestTR = $LP->clearAllTimeSlots($lstBestTR);
                                             $lstBestTR = $LP->assignTimeSlots($lstBestTR, $j, $oC->getCredits(), $oD->getDay());
                                             $oBestRoom = $oR;
                                             $bIsSectionAssigned = true;
                                             $iEarlySectionIndex = $j;
+                                            
+                                            $dayIndexSaved = $i; //save day time assigned
+                                            $timeIndexSaved = $j;
+                                            $isWeekSection = false; //only single day
                                         }
                                     }
                                 }
                             }
                         }
                         
+                        //3 credits and MWF
                         if ($oC->getCredits() == 3 && (strcmp($sProfessorScheduleType, "MWF") == 0)) {
-                            for ($i = 0; $i < $oP->getAvailableDayNames->size(); $i++) {
-                                $oD = $oP->getAvailableDayTimes()[$i];
-                                $lstProfessorDays = array();
-                                $lstProfessorDays = $oD;
+                            $lstProfessorDays = array();
+                            for ($i = 0; $i < strlen($sProfessorScheduleType); $i++) {
+                                $oD = $oP->getDayList()[$i];
+                                $lstProfessorDays[] = $oD;
                             }
-                                
-                            for ($j = 0; j < $lstProfessorDays[0]->getDay(); $j++) {
-                                $bIsHourAvailableForRoom = $LP->isRoomtTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $lstProfessorDays[0]->getDay());
+    
+                            for ($j = 0; $j < sizeof($lstProfessorDays[0]->getTimeLengths()); $j++) {
+                                $bIsHourAvailableForRoom = $LP->isRoomTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $lstProfessorDays[0]->getDay());
                                 $bIsHourAvailableForProfessor = $LP->isProfessorTimesAvailable($j, $lstProfessorDays, $oC->getCredits());
-                                    
-                                if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom) {
+                                //sectionID, dayIndex, timeIndex, isWeek, scheduleType
+                                $bIsCourseConflict = $CC->doesCourseOverlap($oC->getSectionID, -1, $j, true, $sProfessorScheduleType);
+                                        
+                                if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom && !$bIsCourseConflict) {
                                     $dSectionSum = $dHij * $dRoomEfficiency;
                                         
-                                    if ($dSectionSum > $dBestSectionSum && $j < $iEarlySectionIndex) {
+                                    if ($dSectionSum >= $dBestSectionSum && $j < $iEarlySectionIndex) {
                                         $dBestSectionSum = $dsectionSum;
+                                        
                                         $lstBestMWF = $LP->clearAllTimeSlots($lstBestMWF);
                                         $lstBestMWF = $LP->assignTimeSlots($lstBestMWF, $j, $oC->getCredits(), $lstProfessorDays[0]->getDay());
                                         $oBestRoom = $oR;
                                         $bIsSectionAssigned = true;
                                         $iEarlySectionIndex = $j;
+                                        
+                                        $timeIndexSaved = $j;
+                                        $isWeekSection = true; //either MWF or TR
                                     } 
                                 }
                             }
                         }
-                    
+                        
+                        // 3 credits and TR schedule
                         if ($oC->getCredits() == 3 && (strcmp($sProfessorScheduleType, "TR") == 0)) {
-                            for ($i = 0; $i < $oP->getAvailableDayNames->size(); $i++) {
-                                $oD = $oP->getAvailableDayTimes()[$i];
-                                $lstProfessorDays = array();
-                                $lstProfessorDays= $oD;
+                            $lstProfessorDays = array();
+                            for ($i = 0; $i < strlen($sProfessorScheduleType); $i++) {
+                                $oD = $oP->getDayList()[$i];
+                                $lstProfessorDays[] = $oD;
                             }
-                                
-                            for ($j = 0; j < $lstProfessorDays[0]->getDay(); $j++) {
-                                $bIsHourAvailableForRoom = $LP->isRoomtTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $lstProfessorDays[0]->getDay());
+    
+                            for ($j = 0; $j < sizeof($lstProfessorDays[0]->getTimeLengths()); $j++) {
+                                $bIsHourAvailableForRoom = $LP->isRoomTimesAvailable($j, $lstRoomDays, $oC->getCredits(), $lstProfessorDays[0]->getDay());
                                 $bIsHourAvailableForProfessor = $LP->isProfessorTimesAvailable($j, $lstProfessorDays, $oC->getCredits());
-                                    
-                                if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom) {
+                                //sectionID, dayIndex, timeIndex, isWeek, scheduleType
+                                $bIsCourseConflict = $CC->doesCourseOverlap($oC->getSectionID, -1, $j, true, $sProfessorScheduleType); 
+                                
+                                if ($bIsHourAvailableForProfessor && $bIsHourAvailableForRoom && !$bIsCourseConflict) {
                                     $dSectionSum = $dHij * $dRoomEfficiency;
                                         
-                                    if ($dSectionSum > $dBestSectionSum && $j < $iEarlySectionIndex) {
+                                    if ($dSectionSum >= $dBestSectionSum && $j < $iEarlySectionIndex) {
                                         $dBestSectionSum = $dsectionSum;
+                                        
                                         $lstBestTR = $LP->clearAllTimeSlots($lstBestTR);
                                         $lstBestTR = $LP->assignTimeSlots($lstBestTR, $j, $oC->getCredits(), $lstProfessorDays[0]->getDay());
                                         $oBestRoom = $oR;
                                         $bIsSectionAssigned = true;
                                         $iEarlySectionIndex = $j;
+                                        
+                                        $timeIndexSaved = $j;
+                                        $isWeekSection = true; //either MWF or TR
                                     } 
                                 }
                             }
-                        }
-                    }
-                }
+                        } //end 3 credit TR
+                        
+                    }//end if happy
+                }//end roomlist
                 
-                if (isSectionAssigned) {
+                if ($bIsSectionAssigned) {
+                    $this->lstFilledSections[] = $oS;
                     $lstBestTimes = (strcmp($sProfessorScheduleType, "MWF") == 0) ? $lstBestMWF : $lstBestTR;
                     
-                    foreach ($lstBestTimes as $oD) {
-                        for ($i = 0; $i < $lstBestTimes->size(); $i++) {
-                            for ($j = 1; j < $oD->getTimeLengths->size(); $j++) {
-                                if ($oD->getTimeLengths[$j - 1]->isTimeFilled() && $j == 1) {
-                                    $lstBestTimes[i]->getTimeLengths[j - 1]->setCoursePlaceHolder("Course: ".$oS->getSectionID());
-                                    $lstBestTimes[i]->getTimeLengths[j]->setCoursePlaceHolder("Professor: ".$oS->getProfessorAssigned());
-                                } elseif ($oD->getTimeLengths[j]->isTimeFilled() && !$oD->getTimeLengths[j-1]->isTimeFilled()) {
-                                    $lstBestTimes[i]->getTimeLengths[j]->setCoursePlaceHolder("Course: ".$oS->getSectionID());
-                                    $lstBestTimes[i]->getTimeLengths[j + 1]->setCoursePlaceHolder("Professor: ".$oS->getProfessorAssigned());
-                                }
-                            }
-                        }
-                    }
+                    $oS->setRoomAssigned($oBestRoom); //assign room to section
+                    //set placeholders
+                    $lstBestTimes = self::setBestTimesPlaceholders($lstBestTimes, 
+                        $oS->getProfessorAssigned()->getProfessorsName(), 
+                        $oS->getRoomAssigned()->getRoomID());
                     
-                    $oS->setRoomAssigned($oBestRoom);
-                    $oS->setDayTimeAssigned($lstBestTimes);
+                    //only generated needed since no constraints for sections
+                    $oS->setDayTimeAssigned($lstBestTimes); 
                     
-                    $oP->setAvailableDayTimes($lstBestTimes);
-                    $oP->addDayTimes($lstBestTimes);
-                    $oP->getSectionsTaught.add($oS);
+                    $oP->addDayTimes($lstBestTimes, $oS->getSectionID());
+                    $oBestRoom->addDayTimes($lstBestTimes, $oS->getSectionID());
                     
-                    $oBestRoom->addDayTimes($lstBestTimes);
-                    $lstFilledSections[] = $oS;
-                    $bIsSectionAssigned = false;
-                    $iEarlySectionIndex = 100;
-                } else {
-                    $lstMissedSections[] = $oS;
+                    $bIsSectionAssigned = false; //reset
+                    $iEarlySectionIndex = 100; //reset
+                    
+                    //update DB with generate times for current section and its assigned room and professor
+                    $dataHandler->setRoomToSection($oS->getRoomAssigned()->getRoomID(), $oS->getSectionID());
+                    $dataHandler->setProfessorTimesGenerated($oP);
+                    $dataHandler->setRoomTimesGenerated($oBestRoom);
+                    $dataHandler->setSectionTimesGenerated($oS);
+                    
+                    $dayString = self::getDayString($dayIndexSaved, $isWeekSection, $sProfessorScheduleType);
+                    $timeString = self::getTimeString($timeIndexSaved, $oC->getCredits(), $sProfessorScheduleType);
+                    
+                    //saving information in Version History tables
+                    $dataHandler->saveVersionHistoryAssignedSections($this->versionHistoryId, $oC->getCourseCode(), $oS->getSection(), 
+                        $dayString, $timeString, $oP->getProfessorsName(), $oBestRoom->getRoomID());
+                        
+                    $CC->lstCourseConflict[] = array("sectionCode"=>$oS->getSectionID, "dayIndex"=>$dayIndexSaved,  
+                        "timeIndex"=>$timeIndexSaved, "isWeek"=>$isWeekSection, "schedule"=>$sProfessorScheduleType); 
+                } 
+                else {
+                    $this->lstMissedSections[] = $oS;
+                    
+                    //saving information to db of missed sections
+                    $dataHandler->saveVersionHistoryUnassignedSections($this->versionHistoryId, $oC->getCourseCode(), $oS->getSection(), $oP->getProfessorsName());
                 }
                 
                 $dTotalSectionSum += $dBestSectionSum;
             }
             
             $dTotalCourseSum += $dTotalSectionSum;
+            $dTotalSectionSum = 0.0;
+        }
+        $dObjectiveSum += $dTotalCourseSum;
+        $dTotalCourseSum = 0.0;
+    }
+    
+    private function getTimeString($timeIndexSaved, $credits, $sProfessorScheduleType) {
+
+        //start time
+        $timeHourStart = 8;
+        $timeMinuteStart = 0;
+        for ($i = 1; $i < 52; $i++) {
+            if ($timeIndexSaved > $i - 1) {
+                if ($i % 4 == 0) 
+                    $timeHourStart++;
+                // 0 15 30 45
+                $timeMinuteStart + 15 == 60 ? $timeMinuteStart = 0 : $timeMinuteStart += 15;
+            }
+        }
+        $hourOrig = $timeHourStart;
+        $timeHourStart > 11 ? $ampmStart = "pm" : $ampmStart = "am";
+        if ($timeHourStart > 12)
+            $timeHourStart %= 12;
+        
+        //end time
+        $credits == 1 || strcmp($sProfessorScheduleType, "MWF") == 0 ? $addMinute = 0 : $addMinute = 30;
+        $addMinute + $timeMinuteStart >= 60 ? $timeMinuteEnd = ($addMinute + $timeMinuteStart) % 60 : $timeMinuteEnd = $addMinute + $timeMinuteStart;
+        $addMinute + $timeMinuteStart >= 60 ? $addHours = 2 : $addHours = 1;
+        $hourOrig + $addHours > 11 ? $ampmEnd = "pm" : $ampmEnd = "am";
+        $hourOrig + $addHours > 12 ? $timeHourEnd = ($hourOrig + $addHours) % 12 : $timeHourEnd = $hourOrig + $addHours;
+        
+        if ($timeMinuteStart == 0) 
+            $timeMinuteStart = "00";
+        if ($timeMinuteEnd == 0) 
+            $timeMinuteEnd = "00";
+        
+        return $timeHourStart.":".$timeMinuteStart.$ampmStart."-".$timeHourEnd.":".$timeMinuteEnd.$ampmEnd;
+    }
+    
+    private function getDayString($dayIndexSaved, $isWeekSection, $sProfessorScheduleType) {
+
+        if ($isWeekSection){
+            return $sProfessorScheduleType;
+        } 
+        else if (strcmp($sProfessorScheduleType, "MWF") == 0) {
+            switch ($dayIndexSaved) {
+                case 0:
+                    return "M";
+                    break;
+                case 1:
+                    return "W";
+                    break;
+                case 2:
+                    return "F";
+                default:
+                    return "";
+            }
+        }
+        else {
+            switch ($dayIndexSaved) {
+                case 0:
+                    return "T";
+                    break;
+                case 1:
+                    return "R";
+                    break;
+                default:
+                    return "";
+            }
+        }
+    }
+    
+    public function outputGenerated() {
+        
+        foreach ($this->lstFilledSections as $oS) {
+            print "filled ".$oS->getSectionID()." ".$oS->getProfessorAssigned()->getProfessorsName()." ".$oS->getRoomAssigned()->getRoomID()."<br>";
+        }
+        foreach ($this->lstMissedSections as $oS) {
+            print "missed ".$oS->getSectionID()." ".$oS->getProfessorAssigned()->getProfessorsName()."<br>";
         }
         
-        outputPCR();
-        echo "hi";
+        
+        print "************** LIST OF PROFESSORS **************"."<br>";
+        foreach($this->lstProfessors as $oP) {
+            print $oP;
+            foreach ($oP->getDayList() as $oD) {
+                print $oD;
+                foreach ($oD->getTimeLengths() as $oT) {
+                    print $oT;
+                }
+            }
+            print "<br><br><br>";
+        }
+        
+        print "************** LIST OF ROOMS **************"."<br>";
+        foreach($this->lstRooms as $oR) {
+            print $oR;
+            foreach ($oR->getDayList() as $oD) {
+                print $oD;
+                foreach ($oD->getTimeLengths() as $oT) {
+                    print $oT;
+                }
+            }
+            print "<br><br><br>";
+        }
+        
+        print "************** LIST OF COURSES **************"."<br>";
+        foreach($this->lstCourses as $oC) {
+            print $oC."----------<br>";
+            foreach($oC->getCourseSections() as $oS) {
+                print $oS;
+                foreach ($oS->getDayTimeAssigned() as $oD) {
+                    print $oD;
+                    foreach ($oD->getTimeLengths() as $oT) {
+                        print $oT;
+                    }
+                }
+                print "<br><br><br>";
+            }
+        }
+        
     }
-
-    function outPutPCR(){
-       //print out list of professors, list of course, list of rooms,
+    
+    //set primary and alternate placeholders for bestTImes
+    private function setBestTimesPlaceholders($lstBestTimes, $pName, $rID) {
+        foreach ($lstBestTimes as $oD) {
+            foreach ($oD->getTimeLengths() as $oT) {
+                if ($oT->isTimeFilled() && !$oT->isTimeConstraint()) {
+                    $oT->setPrimaryPlaceHolder($rID);
+                    $oT->setAlternatePlaceHolder($pName);
+                }
+            }
+        }
+        return $lstBestTimes;
     }
-
 }

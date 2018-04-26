@@ -1,16 +1,61 @@
+
+<script>
+//------- ROOM OBJECT DECLARATIONS
+    var hasSelection = false;
+    var lstRoomName = [];
+    var lstBuilding = [];
+    var lstRoomID = [];
+    var dSeatingCapacity = [];
+    var sRoomType = [];
+    var lstDayList = [];
+    
+</script>
 <?php
     require_once('css/cssVersion.php');
 	require_once('session.php');
 	require_once('lp/SQLDataHandler.php');
     $dataHandler = new SQLDataHandler();
 	
+	
 	if (isset($_SESSION['user'])) {
 		$userEmail = $_SESSION['user']; //set current user
 		
-		//TODO: fix this so previously selected room is still selected 
 		if (isset($_POST['roomID'])) {
+		    ?><script>
+		    var lastSelection = "<?=$_POST['roomID']?>"; 
+		    if (lastSelection != "") { 
+		        hasSelection = true;
+		    }</script><?php
+		}
+		else {
+		    ?><script>var hasSelection = false;</script><?php
 		}
 		
+		if (isset($_POST['submitModal'])) {
+    		$sRoomNum = filter_input(INPUT_POST, 'roomNum');
+    		$sBuildingNum = filter_input(INPUT_POST, 'bldg');
+    	    $dSeatingCapacity = (int)filter_input(INPUT_POST, 'capacity', FILTER_VALIDATE_INT);
+    	    $sRoomType = filter_input(INPUT_POST, 'roomType');
+    	    
+    	  
+    	    //not negative or incorrect input
+    	    if ($dSeatingCapacity > 0) {
+    			$room = new Room($sRoomNum, $sBuildingNum, $dSeatingCapacity, $sRoomType);
+    			$isRoomAdded = $dataHandler->addRoom($room );
+    
+    			if ($isRoomAdded != 1) { ?>
+    				<script>alert("Error in adding room!");</script> <?php
+    			}
+    			else {  ?>
+    				<script>alert("Room succesfully added");</script> <?php
+    			}
+    		}
+    		else { ?>
+    			<script>alert("Invalid room inputs!");</script> <?php
+    				
+    		}
+	    }
+	
 		//check for deleted room id is dynamic
 		foreach($_POST as $key=>$value) {
 		    //only delete proper key
@@ -26,7 +71,7 @@
 			    else {  ?>
 				<script>alert("Room succesfully deleted. Previous room assignments will remain until a new schedule is generated");</script> <?php
 			    }
-		    } 
+		    }
 		}
 		
         //update room time constraints
@@ -47,7 +92,7 @@
     			}
     			else {  ?>
     				<script>
-    				    alert("Room constraints succesfully updated");
+    				      alert("Room constraints succesfully updated");
     				</script> <?php
     			}
     		}
@@ -78,17 +123,11 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<!-- individual page css -->
 	<link rel="stylesheet" media="screen and (min-width: 1001px)" href="./css/rooms.css?v=<?=$cssVersion?>" />
+	<!-- jquery -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 
 <body>
-    <script> // Global Variables for JavaScript 
-        var lstRoomName = [];
-        var lstBuilding = [];
-        var lstRoomID = [];
-        var dSeatingCapacity = [];
-        var sRoomType = [];
-        var lstDayList = [];
-    </script>
 
 <!-- ------------------------- NAV BAR ----------------------------------------- -->
 <header>
@@ -152,7 +191,6 @@
                     //fill list of timelengths into dayTimes list
                     echo "<script> lstDayTimes.push(lstTimeLength); </script>"; 
                 }
-                //put everything into seperate lists object  (will be condensed into one room object further down)
                 echo "<script> lstRoomName.push('$sRoomName');
                         lstBuilding.push('$sBuilding');
                         lstRoomID.push('$sRoomID');
@@ -400,9 +438,12 @@
         deleteBtn.push(document.getElementById(lstRoom[i].roomID)[1]);
     }
     
+    var oldBtn;
+    
     function showCalendar(index) {
         var roomActive = index;
         var cell;
+        document.getElementById("roomID").value = oldBtn.id;
             
         for (var colIndex = 0; colIndex <= 4; colIndex++) {
             for (var rowIndex = 1; rowIndex <= 52; rowIndex++) {
@@ -415,7 +456,7 @@
                 //blue for time filled
                 else if (lstRoom[roomActive].dayList[colIndex][rowIndex - 1].filled == 1) { 
                     cell.style.backgroundColor = "rgba(30, 144, 255, 0.3)";
-                    cell.innerHTML = lstRoom[roomActive].roomID + "  " /*+ lstRoom[roomActive].dayList[colIndex][rowIndex - 1].primaryHolder*/;
+                    cell.innerHTML = lstRoom[roomActive].dayList[colIndex][rowIndex - 1].primaryHolder + "  " /*+ lstRoom[roomActive].dayList[colIndex][rowIndex - 1].primaryHolder*/;
                 }
                 //clear empty cells
                 else {
@@ -446,9 +487,21 @@
     spanModal.onclick = function() {
         modal.style.display = "none";
     }
-
     
-    var oldBtn = document.getElementById(lstRoom[0].roomID);
+	//saves information for previous button clicked
+    if (hasSelection) {
+        // i was kind of looking into this problem and couldnt really think of a way around it unless we use session storage. ill look around a little more to see if there is a javascript workaround though
+	    oldBtn = document.getElementById(lastSelection);
+	    //clicks oldBtin.id after page finishes loading
+	    $( document ).ready(function() {
+                    $( "#"+oldBtn.id ).trigger( "click" );
+        	   });
+	   
+	   hasSelection = false;
+	} else {
+	    oldBtn = document.getElementById(lstRoom[0].roomID);
+	}
+	
     // info/calendar population
     viewBtn.forEach(function(btn, i) {
         btn.onclick = function() {
@@ -458,14 +511,15 @@
             
             oldBtn = document.getElementById(lstRoom[i].roomID); //assign clicked as old
             document.getElementById("roomID").value = oldBtn.id; //set post value
-            
+           
             //set info
             document.getElementById("building").innerHTML = lstRoom[i].building;
-            document.getElementById("room").innerHTML = lstRoom[i].roomNumber;
+            document.getElementById("room").innerHTML = lstRoom[i].roomNumber; //
             document.getElementById("capacity").innerHTML = lstRoom[i].seatingCapacity;
             document.getElementById("type").innerHTML = lstRoom[i].roomType;
             
             showCalendar(i); //fill calendar
         }
     });
+    
 </script>

@@ -1,9 +1,4 @@
 <?php
-/**
- * NOTES
- * fill day constraint added to add correct boolean for timelength
- * check if method fillDay fillDayConstraint needed or alternate way of setting since fillDay is never used
- */
  require_once('TimeLength.php');
  
 class DayTimes
@@ -45,7 +40,6 @@ class DayTimes
         return $this->lstTimeLengths[$iIndex];
     }
     
-    //TODO: delete two methods below if not needed ----------------------------------
     // @param String $sD: single day string
     // @param int $iX: time index
     // @return void
@@ -67,6 +61,7 @@ class DayTimes
     
     public function __toString()
     {
-        return (string) "DayTime: ".$this->sDay." Time: ".implode(" ", $this->lstTimeLengths)."<br>";
+        //return (string) "DayTime: ".$this->sDay." Time: ".implode(" ", $this->lstTimeLengths)."<br>";
+        return (string) "DayTime: ".$this->sDay."<br><br>";
     }
 }

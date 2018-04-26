@@ -1,47 +1,19 @@
 <?php
-require_once('iDataHandler.php');
 require_once('Professor.php');
 require_once('Room.php');
 require_once('Course.php');
 require_once('Section.php');
-require_once('Debug.php');
-//COMPLETE AND TESTED:
 
-//addProfessor
-//deleteProfessor
-//getProfessors
-//updateProfessorTimesConstraint
-//getTimeStringP **additional
-
-//addRoom
-//deleteRoom
-//getRooms
-//updateRoomTimesConstraint
-//getTimeStringR **additional
-
-//addCourse
-//deleteCourse
-//getCourses
-
-//addSection
-//deleteSection
-//getSectionIDs **addtional
-
-//ADDITIONAL*****
-//getUserPassword
-
-class SQLDataHandler implements iDataHandler
+class SQLDataHandler
 {
 
-    //professor table ordered by professor ID
-    
     private $lstProfessors;
     private $lstRooms;
     private $lstCourses;
     private $db; //PDO
     
     function __construct() {
-        require_once('database.php');
+        require('PDO.php');
         $this->lstProfessors = array();
         $this->lstRooms = array();
         $this->lstCourses = array();
@@ -77,7 +49,7 @@ class SQLDataHandler implements iDataHandler
     // @param void
     // @return ArrayList $lstProfessors: list of professors
     public function getProfessors() {
-		$query = 'SELECT * FROM professor';
+		$query = 'SELECT * FROM professor ORDER BY name';
 	    $statement = $this->db->prepare($query);
 	    $statement->execute();
 	    $result = $statement->fetchAll();
@@ -109,7 +81,7 @@ class SQLDataHandler implements iDataHandler
 	                $professor->getDayByIndex($d)->getTimeLengthByIndex($t)->setIsConstraint($isConstraint);
 	            }
 	        }
-	        $this->lstProfessors[$p['name']] = $professor;
+	        $this->lstProfessors[$p['id']] = $professor;
 	    }
 	   return $this->lstProfessors;
     }
@@ -137,8 +109,9 @@ class SQLDataHandler implements iDataHandler
                 $timeVals = explode(";",$timeString);//course placeholder, alternate placeholder, isFilled, isConstraint
                 $timeVals[2] = ($bIsSetting) ? "true":"false"; //setting or clearing
                 $timeVals[3] = ($bIsSetting) ? "true":"false";
-                //reconstruct string
-                $timeString = $timeVals[0].";".$timeVals[1].";".$timeVals[2].";".$timeVals[3].";";
+                
+                //reconstruct string dont keep placeholders anymore
+                $timeString = "null;null;".$timeVals[2].";".$timeVals[3].";";
                 
                 $query = "UPDATE professor SET ".$iDayIndex."_".$i." = :timeString WHERE id = :professorID";
     	        $statement = $this->db->prepare($query);
@@ -154,6 +127,61 @@ class SQLDataHandler implements iDataHandler
         }
         else {
             return false;
+        }
+    }
+    
+    // @param void
+    // @return void
+    public function clearProfessorTimesGenerated() {
+        $query = "SELECT * FROM professor";
+	    $statement = $this->db->prepare($query);
+	    $statement->execute();
+	    $result = $statement->fetchAll();
+	    $statement->closeCursor();
+
+	    foreach ($result as $r) {
+	        
+           $days = (strcmp($r['availableDays'], "MWF") == 0) ? [1,3,5] : [2,4]; //used for column index
+           $pID = $r['id'];
+            
+           for ($d = 0; $d < sizeof($days); $d++) {
+               for ($t = 0; $t < 52; $t++) {
+                  $timeVals = explode(";",$r[($days[$d])."_".$t]); //course placeholder, alternate placeholder, isFilled, isConstraint
+                  //clear time if a generated time value
+                    if (strcmp($timeVals[2], "true") == 0 && strcmp($timeVals[3], "false") == 0) {
+                        $query2 = "UPDATE professor set ".$days[$d]."_".$t." = 'null;null;false;false;' WHERE id = :id";
+                        $statement2 = $this->db->prepare($query2);
+                        $statement2->bindValue(':id', $pID);
+                        $statement2->execute();
+                        $statement2->closeCursor();
+                    }
+               }
+           }
+	    }
+    }
+    
+    // @param Professor
+    // @return void
+    public function setProfessorTimesGenerated($oProfessor) {
+       
+        $days = (strcmp($oProfessor->getAvailableDayNames(), "MWF") == 0) ? [1,3,5] : [2,4]; //used for column index
+        
+        for ($d = 0; $d < sizeof($days); $d++) {
+            for ($t = 0; $t < 52; $t++) {
+                $oT = $oProfessor->getDayList()[$d]->getTimeLengths()[$t];
+                if ($oT->isTimeFilled() && !$oT->isTimeConstraint()) {
+                    $primary = strcmp($oT->getPrimaryPlaceHolder(), "") == 0 ? 'null;' : $oT->getPrimaryPlaceHolder().';';
+                    $alternate = strcmp($oT->getAlternatePlaceHolder(), "") == 0 ? 'null;' : $oT->getAlternatePlaceHolder().';';
+                    $timeString = $primary.$alternate.'true;false;';
+        
+                    $query = "UPDATE professor set ".$days[$d]."_".$t." = :timeString WHERE id = :id";
+                    $statement = $this->db->prepare($query);
+                    $statement->bindValue(':id', $oProfessor->getProfessorsID());
+                    $statement->bindValue(':timeString', $timeString);
+                    $statement->execute();
+                    $statement->closeCursor();     
+                }
+            }
         }
     }
     
@@ -305,6 +333,60 @@ class SQLDataHandler implements iDataHandler
         }
         return ($rowCount == (($iEndIndex-1) - $iStartIndex) + 1 || $rowCount == 0) ? true: false;
     }
+    
+    // @param void
+    // @return void
+    public function clearRoomTimesGenerated() {
+        $query = 'SELECT * FROM room';
+	    $statement = $this->db->prepare($query);
+	    $statement->execute();
+	    $result = $statement->fetchAll();
+	    $statement->closeCursor();
+
+	    foreach ($result as $r) {
+           $rID = $r['roomString']; //YGR 123A
+           
+           for ($d = 1; $d < 6; $d++) {
+               for ($t = 0; $t < 52; $t++) {
+                   $timeVals = explode(";",$r[$d."_".$t]); //course placeholder, alternate placeholder, isFilled, isConstraint
+                   
+                   //clear time if a generated time value
+                    if (strcmp($timeVals[2], "true") == 0 && strcmp($timeVals[3], "false") == 0) {
+                        $query2 = "UPDATE room set ".$d."_".$t." = 'null;null;false;false;' WHERE roomString = :id";
+                        $statement2 = $this->db->prepare($query2);
+                        $statement2->bindValue(':id', $rID);
+                        $statement2->execute();
+                        $statement2->closeCursor();
+                    }
+               }
+           }
+	    }
+    }
+    
+    // @param Room
+    // @return void
+    public function setRoomTimesGenerated($oRoom) {
+        $d = 1;
+        foreach ($oRoom->getDayList() as $oD) {
+            $t = 0;
+            foreach ($oD->getTimeLengths() as $oT) {
+                if ($oT->isTimeFilled() && !$oT->isTimeConstraint()) {
+                    $primary = strcmp($oT->getPrimaryPlaceHolder(), "") == 0 ? 'null;' : $oT->getPrimaryPlaceHolder().';';
+                    $alternate = strcmp($oT->getAlternatePlaceHolder(), "") == 0 ? 'null;' : $oT->getAlternatePlaceHolder().';';
+                    $timeString = $primary.$alternate.'true;false;';
+
+                    $query = "UPDATE room set ".$d."_".$t." = :timeString WHERE roomString = :id";
+                    $statement = $this->db->prepare($query);
+                    $statement->bindValue(':id', $oRoom->getRoomID());
+                    $statement->bindValue(':timeString', $timeString);
+                    $statement->execute();
+                    $statement->closeCursor();
+                }
+                $t++;
+            }
+            $d++;
+        }
+    }
 
     //@param String $roomID: "YGR 123A"
     //@return  Room
@@ -316,28 +398,31 @@ class SQLDataHandler implements iDataHandler
 	    $r = $statement->fetch();
 	    $statement->closeCursor();
 	    
-        $room = new Room($r['roomNum'], $r['building'], $r['seating'], $r['type']);
-        for ($d = 1; $d < 6; $d++) {
-            for ($t = 0; $t < 52; $t++) {
-                
-                $timeVals = explode(";",$r[$d."_".$t]);//course placeholder, alternate placeholder, isFilled, isConstraint
-                //set course and alternate placeholder
-                if (strcmp($timeVals[0], "null") != 0) {
-                    $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setPrimaryPlaceHolder($timeVals[0]);
+	    if (isset($r['roomNum'])) {
+	        $room = new Room($r['roomNum'], $r['building'], $r['seating'], $r['type']);
+            for ($d = 1; $d < 6; $d++) {
+                for ($t = 0; $t < 52; $t++) {
+                    
+                    $timeVals = explode(";",$r[$d."_".$t]);//course placeholder, alternate placeholder, isFilled, isConstraint
+                    //set course and alternate placeholder
+                    if (strcmp($timeVals[0], "null") != 0) {
+                        $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setPrimaryPlaceHolder($timeVals[0]);
+                    }
+                    if (strcmp($timeVals[1], "null") != 0) {
+                        $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setAlternatePlaceHolder($timeVals[1]);
+                    }
+                    
+                    //set is filled and is constraint
+                    $isFilled = ($timeVals[2] == "true") ? true : false;
+                    $isConstraint = ($timeVals[3] == "true") ? true : false;
+                    $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setTimeFilled($isFilled);
+                    $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setIsConstraint($isConstraint);
                 }
-                if (strcmp($timeVals[1], "null") != 0) {
-                    $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setAlternatePlaceHolder($timeVals[1]);
-                }
-                
-                //set is filled and is constraint
-                $isFilled = ($timeVals[2] == "true") ? true : false;
-                $isConstraint = ($timeVals[3] == "true") ? true : false;
-                $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setTimeFilled($isFilled);
-                $room->getDayByIndex($d-1)->getTimeLengthByIndex($t)->setIsConstraint($isConstraint);
-            }
+    	    }
+            return $room;
 	    }
-
-        return $room;
+	    else
+	        return null;
     }
 
     //@param String $roomString: "YGR123A"
@@ -391,7 +476,7 @@ class SQLDataHandler implements iDataHandler
     // @param List $lstP: list of professors by key value
     // @return List $lstCourses: list of courses
     public function getCourses($lstP) {
-        $query1 = 'SELECT * FROM course';
+        $query1 = 'SELECT * FROM course ORDER BY credits DESC, courseCode ASC';
 	    $statement = $this->db->prepare($query1);
 	    $statement->execute();
 	    $result = $statement->fetchAll();
@@ -400,7 +485,7 @@ class SQLDataHandler implements iDataHandler
         foreach ($result as $c) {
             $course = new Course($c['courseCode'], $c['credits'], $c['type']);
 	        //print $c['courseCode'].$c['credits'].$c['type']."<br>";
-	        $query2 = 'SELECT * FROM section WHERE courseCode = :cCode';
+	        $query2 = 'SELECT * FROM section WHERE courseCode = :cCode ORDER BY sectionID ASC';
     	    $statement2 = $this->db->prepare($query2);
     	    $statement2->bindValue(':cCode', $c['courseCode']);
     	    $statement2->execute();
@@ -410,8 +495,14 @@ class SQLDataHandler implements iDataHandler
     	    //assign sections to course
     	    $lstSectionList = array();
     	    foreach ($result2 as $s) {
-    	        $oProfessor = $lstP[$s['professorName']]; // professorName is key value is Professor
+    	        //assign professor and room to new section
+    	        $oProfessor = $lstP[$s['professorID']]; // professorID is key value is Professor
+    	        $idP = $oProfessor->getProfessorsID();
+    	        $oRoom = self::getRoomByID($s['roomID']);
     	        $section = new Section($s['sectionID'], $c['courseCode'], $s['seating'], $oProfessor);
+    	        if (!is_null($oRoom))
+    	            $section->setRoomAssigned($oRoom);
+    	        
     	        //assign placeholders, is filled and is constraint
     	        for ($d = 1; $d < 6; $d++) {
     	            for ($t = 0; $t < 52; $t++) {
@@ -438,19 +529,98 @@ class SQLDataHandler implements iDataHandler
         return $this->lstCourses;
     }
     
+    // @param void
+    // @return void
+    public function clearCourseTimesGenerated() {
+        $query = 'SELECT * FROM section';
+	    $statement = $this->db->prepare($query);
+	    $statement->execute();
+	    $result = $statement->fetchAll();
+	    $statement->closeCursor();
+
+	    foreach ($result as $r) {
+           //$days = (strcmp($r['availableDays'], "MWF") == 0) ? [1,3,5] : [2,4]; //used for column index
+           $cID = $r['sectionID']; //EGR101A
+           
+           for ($d = 1; $d < 6; $d++) {
+               for ($t = 0; $t < 52; $t++) {
+                   $timeVals = explode(";",$r[$d."_".$t]); //course placeholder, alternate placeholder, isFilled, isConstraint
+                   
+                   //clear time if a generated time value
+                    if (strcmp($timeVals[2], "true") == 0 && strcmp($timeVals[3], "false") == 0) {
+                        $query2 = "UPDATE section set ".$d."_".$t." = 'null;null;false;false;' WHERE sectionID = :id";
+                        $statement2 = $this->db->prepare($query2);
+                        $statement2->bindValue(':id', $cID);
+                        $statement2->execute();
+                        $statement2->closeCursor();
+                    }
+               }
+           }
+	    }
+    }
+    
+    // @param Section
+    // @return void
+    public function setSectionTimesGenerated($oSection) {
+        
+        $days = (sizeof($oSection->getDayTimeAssigned()) == 3) ? [1,3,5] : [2,4]; //used for column index
+        $d = 0;
+        foreach ($oSection->getDayTimeAssigned() as $oD) {
+            $t = 0;
+            foreach ($oD->getTimeLengths() as $oT) {
+                if ($oT->isTimeFilled() && !$oT->isTimeConstraint()) {
+                    $primary = strcmp($oT->getPrimaryPlaceHolder(), "") == 0 ? 'null;' : $oT->getPrimaryPlaceHolder().';';
+                    $alternate = strcmp($oT->getAlternatePlaceHolder(), "") == 0 ? 'null;' : $oT->getAlternatePlaceHolder().';';
+                    $timeString = $primary.$alternate.'true;false;';
+
+                    $query = "UPDATE section set ".$days[$d]."_".$t." = :timeString WHERE courseSection = :id";
+                    $statement = $this->db->prepare($query);
+                    $statement->bindValue(':id', $oSection->getSectionID());
+                    $statement->bindValue(':timeString', $timeString);
+                    $statement->execute();
+                    $statement->closeCursor();
+                }
+                $t++;
+            }
+            $d++;
+        }
+    }
+    
+    // @param String $roomID
+    // @param String $sectionID
+    // @return void
+    public function setRoomToSection($roomID, $sectionID) {
+        $query = "UPDATE section set roomID = :rid WHERE courseSection = :sid";
+        $statement = $this->db->prepare($query);
+        $statement->bindValue(':rid', $roomID);
+        $statement->bindValue(':sid', $sectionID);
+        $statement->execute();
+        $statement->closeCursor();
+    }
+    
+    //clear sections roomIDs before generating a new schedule
+    // @param void
+    // @return void
+    public function clearRoomsAssignedToSections() {
+        $query = "UPDATE section set roomID = NULL WHERE id > 0";
+        $statement = $this->db->prepare($query);
+        $statement->execute();
+        $statement->closeCursor();
+    }
+    
     // @param Section $oSection
     // @param String $sCourseCode : course section is added to
     // @return int rows affected
     public function addSection($oSection, $sCourseCode) {
-        $query = 'INSERT INTO section (sectionID, courseCode, courseSection, seating, professorName) 
-            VALUES (:sectionID, :courseCode, :courseSection, :seating, :professorName)';
+        $query = 'INSERT INTO section (sectionID, courseCode, courseSection, seating, professorID) 
+            VALUES (:sectionID, :courseCode, :courseSection, :seating, :professorID)';
 	    $statement = $this->db->prepare($query);
 
 	    $statement->bindValue(':sectionID', $oSection->getSection());
 	    $statement->bindValue(':courseCode', $sCourseCode);
 	    $statement->bindValue(':courseSection', $oSection->getSectionID());
 	    $statement->bindValue(':seating', (int) $oSection->getSectionSize());
-	    $statement->bindValue(':professorName', $oSection->getProfessorAssigned()->getProfessorsName());
+	    $statement->bindValue(':professorID', $oSection->getProfessorAssigned()->getProfessorsID());
 	    $statement->execute();
 	    $statement->closeCursor();
 	   
@@ -506,7 +676,146 @@ class SQLDataHandler implements iDataHandler
 	    
 	   return $passwordServer;
 	}
+	
+	//@param 
+	//Description: this function is to be called at the beginning of the algorithms' run. 
+	//return Version id for current algorithm run
+	public function getHistoryVersionId(){
+	    //inserting current timestamp to database
+	    //NOTE: the Interval is being used in order to keep the current timezone in California. Adjust as necessary
+	    $query = 'INSERT INTO VersionsSchedule (versionId, dateCreated) VALUES (null, Now() - INTERVAL 7 HOUR)';
+	    $statement = $this->db->prepare($query);
+	    $statement->execute();
+	    $last_id = $this->db->lastInsertId();  //this acquires the id of last inserted
+	    $statement->closeCursor();
+	    
+	    return $last_id;
+	}
+	
+	//Description: this function takes in the necessary parameters to save a history of the versions that are created by the algorithm. 
+	//@param string course name, string section name, string daysAssigned, string time when course takes place
+	//       string professors'name , string room building and number
+	//@return void 
+	public function saveVersionHistoryAssignedSections($last_id, $course, $section, $daysAssigned, $classTime, $profName, $room){
+	    
+	    $query = 'INSERT INTO Schedule (idVersion, course, section, daysAssigned, time, professor, room) VALUES 
+	        (:id, :course, :section, :daysAssigned, :time, :professor, :room)';
+	    $statement = $this->db->prepare($query);
+	    $statement->bindValue(':id', $last_id, PDO::PARAM_STR);
+	    $statement->bindValue(':course', $course, PDO::PARAM_STR);
+	    $statement->bindValue(':section', $section, PDO::PARAM_STR);
+	    $statement->bindValue(':daysAssigned', $daysAssigned, PDO::PARAM_STR);
+	    $statement->bindValue(':time', $classTime, PDO::PARAM_STR);
+	    $statement->bindValue(':professor', $profName, PDO::PARAM_STR);
+	    $statement->bindValue(':room', $room, PDO::PARAM_STR);
+	    $statement->execute();
+	    $statement->closeCursor();
+	}
+	
+	//@param string course name, string section name, string daysAssigned, string time when course takes place
+	//Description: this function takes in the necessary parameters to save a history of the versions that are created by the algorithm. 
+	//@return void
+	public function saveVersionHistoryUnassignedSections($last_id, $course, $section, $pName){
+	      // create query to save in Schedule whatever was sent from Main
+	    $query = 'INSERT into SectionsNotAssigned (idVersions, course, section, professor) VALUES (:id, :course, :section, :professor)';
+	    $statement = $this->db->prepare($query);
+	    $statement->bindValue(':id', $last_id, PDO::PARAM_STR);
+	    $statement->bindValue(':course', $course, PDO::PARAM_STR);
+	    $statement->bindValue(':section', $section, PDO::PARAM_STR);
+	     $statement->bindValue(':professor', $pName);
+	    $statement->execute();
+	    $statement->closeCursor();
+	}
+	
+	//Description: function that returns Version History Times for dropdown
+	//@params
+	//@return array with version History Times
+	public function getVersionHistoryTimes(){
+	    
+	    $query= 'SELECT dateCreated from VersionsSchedule';
+	    $statement = $this->db->prepare($query);
+	    $statement->execute();
+	    $result = $statement->fetchAll();
+        $statement->closeCursor(); 
+        
+        $versionsArray = array();
+        foreach ($result as $v) {
+            $versionsArray[] = $v['dateCreated'];
+        }
+        
+        return $versionsArray;
+	}
+	
+	//Description function that returns Schedule values pertaining to a specific date
+	//@param
+	//@return arrays holding schedule information
+	public function getFilledSchedulePerDate($date){
+	    
+	    //query to get id based on date
+	    $query= 'SELECT versionId FROM VersionsSchedule WHERE dateCreated = :date';
+	    $statement = $this->db->prepare($query);
+	    $statement->bindValue(':date', $date, PDO::PARAM_STR);
+	    $statement->execute();
+	    $result = $statement->fetch();
+	    $idVersion = $result['versionId'];
+	    
+	    //with the acquired id, now query get all values pertaining to that id
+	    $query= 'SELECT course, section, daysAssigned, time, professor, room FROM Schedule WHERE idVersion = :id';
+	    $statement = $this->db->prepare($query);
+	    $statement->bindValue(':id', $idVersion);
+	    $statement->execute();
+	    $result = $statement->fetchAll();
+        $statement->closeCursor(); 
+        
+        //values of all the columns will be stored in arrays that will then be stored in a two dimensional array
+        $scheduleArray = array();
+        
+        foreach ($result as $r) {
+             $scheduleArray[] = array(
+             "course" => $r['course'],
+             "section" => $r['section'],
+             "daysAssigned" => $r['daysAssigned'],
+             "time" => $r['time'],
+             "professor" => $r['professor'],
+             "room" => $r['room']
+            );
+        }
+        return $scheduleArray; //im in main scheduling 
+	}
+	
+    //Description function that returns Schedule values pertaining to a specific date
+	//@param
+	//@return arrays holding schedule information
+	public function getUnfilledSchedulePerDate($date){
+	    
+	    //query to get id based on date
+	    $query= 'SELECT versionId FROM VersionsSchedule WHERE dateCreated = :date';
+	    $statement = $this->db->prepare($query);
+	    $statement->bindValue(':date', $date, PDO::PARAM_STR);
+	    $statement->execute();
+	    $result = $statement->fetch();
+	    $idVersion = $result['versionId'];
+	    
+	    //with the acquired id, now query get all values pertaining to that id
+	    $query= 'SELECT course, section, professor FROM SectionsNotAssigned WHERE idVersions = :id';
+	    $statement = $this->db->prepare($query);
+	    $statement->bindValue(':id', $idVersion);
+	    $statement->execute();
+	    $result = $statement->fetchAll();
+        $statement->closeCursor(); 
+        
+        //values of all the columns will be stored in arrays that will then be stored in a two dimensional array
+        $scheduleArray = array();
+        
+        foreach ($result as $r) {
+             $scheduleArray[] = array(
+             "course" => $r['course'],
+             "section" => $r['section'],
+             "professor" => $r['professor']
+            );
+        }
+        return $scheduleArray; //im in main scheduling 
+	}
 
 }
-
-?>
+?> 

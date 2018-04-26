@@ -5,7 +5,7 @@
 	<div class="modal-content" id="modal_room">
 		<span class="close_modal"><p>&times;</p></span>
 		<h3>ADD ROOM</h3>
-		<form action="" method="POST">
+		<form method="POST">
 		    <!-- BUILDING / ROOM # -->
 			<span class="row">
 			    <span class="column-1 columns-left">&nbsp</span>
@@ -31,35 +31,7 @@
 				</span>
 				<span class="column-1 columns-left">&nbsp</span>
 			</span>
-			
 			<input type="submit" class="submit_button columns-right" value="Submit" name="submitModal"/>
 		</form>
 	</div>
 </div>
-
-<?php
-	if (isset($_POST['submitModal'])) {
-		$sRoomNum = filter_input(INPUT_POST, 'roomNum');
-		$sBuildingNum = filter_input(INPUT_POST, 'bldg');
-	    $dSeatingCapacity = (int)filter_input(INPUT_POST, 'capacity', FILTER_VALIDATE_INT);
-	    $sRoomType = filter_input(INPUT_POST, 'roomType');
-	    
-	  
-	    //not negative or incorrect input
-	    if ($dSeatingCapacity > 0) {
-			$room = new Room($sRoomNum, $sBuildingNum, $dSeatingCapacity, $sRoomType);
-			$isRoomAdded = $dataHandler->addRoom($room );
-
-			if ($isRoomAdded != 1) { ?>
-				<script>alert("Error in adding room!");</script> <?php
-			}
-			else {  ?>
-				<script>alert("Room succesfully added");</script> <?php
-			}
-		}
-		else { ?>
-			<script>alert("Invalid room inputs!");</script> <?php
-				
-		}
-	}
-?>

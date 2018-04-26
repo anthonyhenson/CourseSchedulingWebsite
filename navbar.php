@@ -4,7 +4,7 @@
 	</span>
 	<span class="column-6 columns-left">
 		<span class="nav_links_expanded columns-right">
-			<button id="sign_out_nav">SIGN OUT</button>
+			<button id="sign_out_nav"><a href="logout.php">SIGN OUT</a></button>
 			<a href="courses.php">
 				<i class="fa fa-file-code-o nav_items fa-2x tooltip" aria-hidden="true">
 					<span class="tooltiptext blue">COURSES</span>

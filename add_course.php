@@ -58,7 +58,8 @@
 				<script>alert("Error in adding course!");</script> <?php
 			}
 			else {  ?>
-				<script>alert("Course succesfully added");</script> <?php
+				<script>alert("Course succesfully added");
+				window.location.assign("courses.php");</script> <?php
 			}
 		}
 		else { ?>

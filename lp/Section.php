@@ -1,9 +1,4 @@
 <?php
-/**
- * NOTES
- * size is added to section
- * take out two methods if not needed
- */
 
 class Section
 {
@@ -26,8 +21,8 @@ class Section
         $this->sSectionID = $sSec.$sID;
         $this->dSectionSize = $dSize;
         
-        //POSSIBLE PROBLEM WITH PROFESSOR OBJECT HERE
         $this->oProfessorAssigned = $oP;
+        $this->oRoomAssigned = null;
 
         //all days added to section
         $this->lstDayTimeAssigned = array();

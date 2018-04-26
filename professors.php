@@ -7,9 +7,13 @@
 	if (isset($_SESSION['user'])) {
 		$userEmail = $_SESSION['user'];
 		
-		//TODO: fix this so previously selected professor is still selected 
 		if (isset($_POST['professorID'])) {
-		   
+		    ?><script>var lastSelection = "<?=$_POST['professorID']?>"; 
+		    var hasSelection = true;
+		    </script><?php
+		}
+		else {
+		    ?><script>var hasSelection = false;</script><?php
 		}
 		
 		//check for deleted professor id is dynamic
@@ -64,6 +68,7 @@
 <!DOCTYPE html>
 <html lang="en-us">
 <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<title>CBU</title>
   	<meta charset="UTF-8">
   	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -401,6 +406,7 @@
             for (var rowIndex = 1; rowIndex <= 52; rowIndex++) {
                 cell = document.getElementById('main_table').rows[rowIndex].cells[colIndex];
                 cell.style.backgroundColor = "rgba(64, 64, 64, 0.8)";
+                cell.innerHTML = "";
             }
         }
 
@@ -417,7 +423,7 @@
                 // //blue for time filled but not constraint
                 else if (lstProfessor[pIndex].dayList[pDayIndex[dayIndex]][rowIndex - 1].filled == 1) { 
                     cell.style.backgroundColor = "rgba(30, 144, 255, 0.3)";
-                    cell.innerHTML = lstProfessor[pIndex].id + "  " /*+ lstRoom[roomActive].dayList[colIndex][rowIndex - 1].primaryHolder*/;
+                    cell.innerHTML = lstProfessor[pIndex].dayList[pDayIndex[dayIndex]][rowIndex - 1].primaryHolder;
                 }
                 // //clear empty cells
                 else {
@@ -449,7 +455,20 @@
         modal.style.display = "none";
     }
     
-    var oldBtn = document.getElementById(lstProfessor[0].id);
+    //saves information for previous button clicked
+    if (hasSelection) {
+	    var oldBtn = document.getElementById(lastSelection);
+	    
+	    //clicks oldBtin.id after page finishes loading
+	    $( document ).ready(function() {
+            $( "#"+oldBtn.id ).trigger( "click" );
+	   });
+	   
+	   hasSelection = false;
+	} else {
+	    var oldBtn = document.getElementById(lstProfessor[0].id);
+	}
+	
     // info/calendar population
     viewBtn.forEach(function(btn, i) {
         btn.onclick = function() {

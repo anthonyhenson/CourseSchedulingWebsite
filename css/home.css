@@ -1,3 +1,4 @@
+
 /* ------------------------------------ HOME RESOURCE LINKS --------------------------------*/
 .all_resources {
 	width: 66.66%;
@@ -63,6 +64,11 @@
 	border-spacing: 5px;
 	border-collapse: separate;
 }
+#course_unassigned_table {
+	width: 100%;
+	border-spacing: 5px;
+	border-collapse: separate;
+}
 th {
 	padding: 0.5em;
 	background-color: #00275E;
@@ -81,3 +87,37 @@ td {
 tr:nth-child(even) td {background-color: #d9d9d9;}
 tr:nth-child(odd) td {background-color: #f2f2f2;}
 
+#date_button {
+	background-color: #FEB729;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-left: 25px;
+	line-height: 25px;
+	height: 30px;
+	transition-duration: 0.7s;
+	font-size: 15px;
+	width: 70%;
+}
+#date_button:hover {
+    background-color: #00275E;
+    transition-duration: 0.9s;
+}
+#date_button:active {
+    background-color: #A8B1B8;
+}
+
+/* generated schedule */ 
+.date_generated_dropdown {
+	height: 30px;
+	border: 1px solid #545557;
+	text-align: center;
+	border-radius: 5%;
+	width: 200px;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 90px;
+	vertical-align: middle;
+	text-indent: 2px;
+	color: #545557;
+}

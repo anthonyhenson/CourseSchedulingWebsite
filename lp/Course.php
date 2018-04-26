@@ -1,9 +1,4 @@
 <?php
-/**
- * NOTES
- * size taken out and put into section
- * check if assignAllSections needed and take out if not
- */
 
 class Course
 {

@@ -1,4 +1,4 @@
-<script> 
+ <script> 
 //----- COURSE OBJECT DECLARATIONS
     var lstCourseCode = [];
     var lstCourseCredits = [];
@@ -17,29 +17,21 @@
 	require_once('session.php');
 	require_once('lp/SQLDataHandler.php');
     $dataHandler = new SQLDataHandler();
-    $lastCoursePHP; //sets last course selected 
     
 	if (isset($_SESSION['user'])) {
 		$userEmail = $_SESSION['user'];
-		
-		//check for deleted professor id is dynamic 
+
+		//save last course selected
 		if (isset($_POST['course_eval'])) {
-		    ?><script>var lastSelection = "<?=$_POST['course_eval']?>"; 
-			if (lastSelection != "") {
-			    hasSelection = true;
-			}</script><?php
-		}
-		else if (isset($_POST['course_eval2'])) {
 		    ?><script>
-		    alert("<?=$_POST['course_eval2']?>");
-		    var lastSelection = "<?=$_POST['course_eval2']?>"; 
-			if (lastSelection != "") {
+		        lastCourseCode = "<?=$_POST['course_eval']?>"; 
 			    hasSelection = true;
-			}</script><?php
+			</script><?php
 		}
-		else {
-		    ?><script>hasSelection = false;</script><?php
+		else { ?>
+		    <script>hasSelection = false;</script><?php
 		}
+		
 		//delete just sections
 		$sectionIDsToBeDeleted = array();
  		foreach($_POST as $key=>$value) {
@@ -47,39 +39,15 @@
      	        $sectionIDsToBeDeleted[] = $key;
      	    }
  		}
- 		
 	    $isSecsDeleted = $dataHandler->deleteSections($sectionIDsToBeDeleted);
         if (!$isSecsDeleted) { ?>
 		    <script> alert("Error in deleting sections!"); </script> <?php
 	    }
 	    else if ($isSecsDeleted && sizeof($sectionIDsToBeDeleted) > 0){  ?>
-		    <script> alert("Sections have been succesfully deleted. Previous course assignments will remain until a new schedule is generated"); </script> <?php
+		    <script> alert("Sections have been succesfully deleted. Previous course assignments will remain until a new schedule is generated"); 
+		    window.location.assign("courses.php");</script> <?php
 	    }
-		
-		if (isset($_POST['submitModalS'])) {
-		
-		    $sSection = filter_input(INPUT_POST, 'section');
-		    $sCourseCodeLast = filter_input(INPUT_POST, 'course_eval2'); //this guy
-    		$iSeating = filter_input(INPUT_POST, 'seating', FILTER_VALIDATE_INT);
-    		$sProfessorID = filter_input(INPUT_POST, 'professor');
-    		$professor = $dataHandler->getProfessorByID($sProfessorID);
-    		
-    	    if ($sSection != "" && $iSeating != "") {
-    	    	$section = new Section($sSection, $sCourseCodeLast, $iSeating, $professor);
-    			$isSectionAdded = $dataHandler->addSection($section, $sCourseCodeLast);
-    
-    			if ($isSectionAdded != 1) { ?>
-    				<script>alert("Error in adding section!");</script> <?php
-    			}
-    			else {  ?> 
-    				<script>alert("Section succesfully added");</script> <?php
-    			}
-    		}
-    		else { ?>
-    			<script>alert("Invalid Section inputs!");</script> <?php
-    		}
-	    }
-		
+				
 		//iterate POSTS to delete course
 		foreach($_POST as $key=>$value) {
 		    //only delete proper key
@@ -94,6 +62,7 @@
 			    }
 		    }
 		}
+		
 		
 	}
 	else {
@@ -257,7 +226,7 @@
                         <input id=\"$courseCode\" type=\"submit\" value=\"Delete\" name=\"$courseCode\" onclick=\"return confirm('Are you sure?');\" />
                     </span>
                 </span>";
-            } //end course
+            } //course
             ?>
             
         </form>
@@ -285,18 +254,18 @@
     </span>
 </span>
     
-<!-- // individual sections output once selected -->
+<!-- // individual sections DYNAMICALLY OUTPUT ONCE READY -->
 <form action="courses.php" method="POST">
     <div class="view_course" id="view_sections"></div>
     
     <!-- CONSTRAINTS -->
     <span class="row container view_course">
         <span class="column-9 columns_left">
-            <input name="course_eval"  id="course_eval" type="hidden" value=""/>
-        </span>
-	    <span class="column-3 columns_left">
-			<input name="delete_section"  id="delete_section" type="submit" value="Delete Section"/>
-		</span>
+            <input name="course_eval"  id="course_eval" type="hidden" value=""/></span>
+    	<span class="column-3 columns_left">
+    			<input name="delete_section"  id="delete_section" type="submit" value="Delete Section"/>
+    		</span>
+    	</span>
     </span>
 </form>
 
@@ -385,7 +354,7 @@
     var oldBtn;
 	//saves information for previous button clicked
     if (hasSelection) {
-	    oldBtn = document.getElementById(lastSelection);
+	    oldBtn = document.getElementById(lastCourseCode);
 	    //clicks oldBtin.id after page finishes loading
 	    $( document ).ready(function() {
                     $( "#"+oldBtn.id ).trigger( "click" );
@@ -409,7 +378,6 @@
             //set last clicked course
             oldBtn = document.getElementById(lstCourses[i].code); //assign clicked as old
             document.getElementById("course_eval").value = oldBtn.id; //set course for post value
-            document.getElementById("course_eval2").value = oldBtn.id; //set course2 for post value
             
             //set basic course info
             document.getElementsByClassName("cCode")[0].innerHTML = lstCourses[i].code; //for courses page  courseCode
@@ -468,12 +436,11 @@
 			string1 += "</span>";
 			string1 += "</span>";
 			string1 += "<span class=\"column-1 columns_left\"></span>";
-			string1 += "<input type=\"hidden\" name=\"course_eval2\" id=\"course_eval2\" value=\"" +  document.getElementsByClassName("cCode")[0].innerHTML + ">"; //here this i think is only ran once
 			string1 += "</span>";
 
             sectionHTML.insertAdjacentHTML('beforeend', string1);
             sectionBtn.push(document.getElementById(secID));
-            document.getElementById("course_eval2").value = oldBtn.id;
+            document.getElementById("course_eval").value = oldBtn.id;
     	}
     	if (sectionBtn.length > 0) {
             alter[1].style.display = "inline";
@@ -485,6 +452,7 @@
         }
         
     }
+    
     
     function selectSection(buttonObj, newVal) {
         var id = buttonObj.id;
@@ -528,3 +496,48 @@
     }
 	
 </script>
+
+<?php
+	if (isset($_POST['submitModalS'])) {
+	    ?><script>alert("in submit modal section");</script><?php //happening twice
+		$sSection = filter_input(INPUT_POST, 'section');
+		$sCourseCodeLast = filter_input(INPUT_POST, 'course_eval');
+		$iSeating = filter_input(INPUT_POST, 'seating', FILTER_VALIDATE_INT);
+		$sProfessorID = filter_input(INPUT_POST, 'professor');
+		$professor = $dataHandler->getProfessorByID($sProfessorID);
+		
+	    if ($sSection != "" && $iSeating != "") {
+	    	$section = new Section($sSection, $sCourseCodeLast, $iSeating, $professor);
+			$isSectionAdded = $dataHandler->addSection($section, $sCourseCodeLast);
+
+			if ($isSectionAdded != 1) { ?>
+				<script>alert("Error in adding section!");</script> <?php
+			}
+			else {  ?> 
+				<script>alert("Section succesfully added");
+				window.location.replace("courses.php"); 
+				//you here??
+				//im going to save this as is in another file so you can feel free to mess with it all you want
+
+				//window.location.replace("courses.php");
+				//window.location.reload();
+	        
+		//		oldBtn = course_eval; //this wouldnt know what course_eval is
+	        //and this needs to be put in a different location to be ran as soon as the page loads
+	       
+	       
+    //     	    //clicks oldBtin.id after page finishes loading
+    
+     //     	    $( document ).ready(function() {
+     //                $( "#"+oldBtn.id ).trigger( "click" );
+    //     	   });
+        	   
+        	   </script> <?php
+			}
+		}
+		else { ?>
+			<script>alert("Invalid Section inputs!");</script> <?php
+		}
+	}
+
+?>

@@ -37,22 +37,22 @@ class Room
     
     // @param List DayTimes $lstTimeToAdd
     // @return void
-    public function addDayTimes($lstTimesToAdd){
-        //day in daytimes
-        foreach ($this->lstAvailableDayTimes as $oD){
+    public function addDayTimes($lstTimesToAdd, $sectionID){
+                //day in daytimes
+        foreach (self::getDayList() as $oD){
             //timelength in daytimes
-            foreach ($oD->getDayTimes() as $oT){
+            foreach ($oD->getTimeLengths() as $oT){
                 //day to add in list of DayTimes
                 foreach ($lstTimesToAdd as $oDayToAdd){
                     //timelength in day to add
-                    foreach ($oDayToAdd->getDayTimes() as $oTimeAdd){
+                    foreach ($oDayToAdd->getTimeLengths() as $oTimeAdd){
                         if (strcmp($oD->getDay(), $oDayToAdd->getDay()) == 0 &&
                                 $oT->getStartTimeHour() == $oTimeAdd->getStartTimeHour() &&
                                 $oT->getStartTimeMinute() == $oTimeAdd->getStartTimeMinute() &&
-                                $oTimeAdd->isTimeFilled()){
+                                $oTimeAdd->isTimeFilled()) {
                                 
                             $oT->setTimeFilled(true);
-                            $oT->setPrimaryPlaceHolder($oTimeAdd->getPrimaryPlaceHolder());
+                            $oT->setPrimaryPlaceHolder($sectionID);
                         }
                     }
                 }
@@ -90,5 +90,9 @@ class Room
         return $this->lstDayList[$iIndex];
     }
 
-    //public function toString() {echo('Turn this into formatted output: Room.php');}
+    public function __toString()
+    {
+        return (string) "RoomID: ".$this->sRoomID." Seating: ".$this->dSeatingCapacity.
+        " Type: ".$this->sRoomType."<br>";
+    }
 }

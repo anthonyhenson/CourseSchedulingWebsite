@@ -3,7 +3,6 @@
 	require_once 'css/cssVersion.php';
 	require_once 'session.php';
 	require_once 'lp/SQLDataHandler.php';
-
 	
 	//<!-- ------------------------- LOGIN ----------------------------------------- -->
 	if (isset($_POST['login'])) {
@@ -11,12 +10,8 @@
 			$userEmail = filter_input(INPUT_POST, 'emailInput', FILTER_VALIDATE_EMAIL);
 	    $passwordInput = filter_input(INPUT_POST, 'passwordInput');
 	    $passwordEncr = sha1($userEmail . $passwordInput); //hash password with salt
-	    
 	    $passwordServer = $dataHandler->getUserPassword($userEmail);
-	    
-	    $passwordEncr = "password";
-	    $passwordServer = "password";
-	    
+
 	    if ($userEmail != NULL && $passwordInput != NULL && $passwordEncr == $passwordServer) { 
 	    	$_SESSION['user'] = $userEmail; ?>
 	    	<script>
@@ -56,17 +51,9 @@
         <form method="post" action="login.php" role="login">
           <img src="./img/cbu_logo_login.jpg" class="img-responsive" alt="" width="140" height="90" />
           <input type="username" name="emailInput" placeholder="Username" required class="form-control input-lg" value="" />
-          
-          
           <input type="password" class="form-control input-lg" name="passwordInput" id="password" placeholder="Password" required="" />
-          
-          
           <div class="pwstrength_viewport_progress"></div>
-          
-          
           <button type="submit" name="login" id="logIn" class="btn btn-lg btn-default btn-block">Sign in</button>
-          <span class="reset_pass" id="forgot_password"><a href="">Forgot Password?</a></span>
-          
         </form>
       </section>  
       </div>

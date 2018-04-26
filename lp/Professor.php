@@ -30,13 +30,15 @@ class Professor
 		}
     }
 
+    //adds filled best times to professors schedule
     // @param List DayTimes $lstTimeToAdd
     // @return void
-    public function addDayTimes($lstTimesToAdd){
-        //day in daytimes
-        foreach ($this->lstAvailableDayTimes as $oD){
+    public function addDayTimes($lstTimesToAdd, $sectionID) {
+        
+        //day in daytimes of professor
+        foreach (self::getDayList() as $oD){
             //timelength in daytimes
-            foreach ($oD->getTimeLengths() as $oT){
+            foreach ($oD->getTimeLengths() as $oT) {
                 //day to add in list of DayTimes
                 foreach ($lstTimesToAdd as $oDayToAdd){
                     //timelength in day to add
@@ -47,7 +49,7 @@ class Professor
                                 $oTimeAdd->isTimeFilled()){
                                 
                             $oT->setTimeFilled(true);
-                            $oT->setPrimaryPlaceHolder($oTimeAdd->getPrimaryPlaceHolder());
+                            $oT->setPrimaryPlaceHolder($sectionID);
                         }
                     }
                 }
@@ -58,6 +60,7 @@ class Professor
     // @param void
     // @return List DayTimes $lstAvailableDayTimes
     public function getDayList() {return $this->lstAvailableDayTimes;}
+    
 
     // @param void
     // @return List Section $lstSectionsTaught
